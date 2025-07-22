@@ -1,0 +1,59 @@
+id: advanced-subdomain-takeover
+
+info:
+  name: Advanced Subdomain Takeover Detection
+  author: soumen
+  severity: high
+  description: Detects potential subdomain takeover vulnerabilities by matching common error messages and behaviors.
+  reference:
+    - https://github.com/EdOverflow/can-i-take-over-xyz
+    - https://github.com/projectdiscovery/nuclei-templates
+  tags: takeover,misconfiguration,dns
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+    headers:
+      User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0 Safari/537.36
+
+    matchers-condition: or
+    matchers:
+      - type: word
+        words:
+          - "NoSuchBucket"
+          - "NoSuchDomain"
+          - "The specified bucket does not exist"
+          - "There's nothing here, yet"
+          - "Do you want to register"
+          - "Repository not found"
+          - "Unclaimed"
+          - "Non-Existent Domain"
+          - "Sorry, this page is no longer available."
+          - "The resource could not be found"
+          - "Please claim your domain"
+          - "This project has been removed"
+          - "No such app"
+          - "Heroku | No such app"
+          - "You've found a page that doesn't exist."
+          - "There is no app configured at that hostname"
+          - "Unknown Site"
+          - "Fastly error: unknown domain"
+          - "The feed has not been found."
+          - "The thing you were looking for is no longer here"
+        condition: or
+        part: body
+
+      - type: status
+        status:
+          - 404
+          - 400
+          - 403
+          - 500
+
+    extractors:
+      - type: regex
+        part: body
+        regex:
+          - "(?:NoSuchBucket|NoSuchDomain|Please claim your domain|Fastly error: unknown domain|Heroku | No such app)"
+

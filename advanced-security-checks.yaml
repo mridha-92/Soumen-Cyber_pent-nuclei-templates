@@ -1,0 +1,52 @@
+id: advanced-security-checks
+
+info:
+  name: Comprehensive Security Scanner
+  author: soumen-mridha
+  severity: high
+  description: Detects sensitive API endpoints, 403 bypass vectors, and cloud storage misconfigurations.
+
+requests:
+  - method: GET
+    path:
+      - "{{BaseURL}}/api/v1/FUZZ"
+      - "{{BaseURL}}/admin/FUZZ"
+      - "{{BaseURL}}/.git/config"
+      - "{{BaseURL}}/s3-bucket-name"
+      - "{{BaseURL}}/gcs-bucket"
+      - "{{BaseURL}}/aws-credentials"
+      - "{{BaseURL}}/azure-keys"
+      - "{{BaseURL}}/.env"
+      - "{{BaseURL}}/backup.tar.gz"
+
+    headers:
+      X-Original-URL: "/admin"
+      X-Forwarded-For: "127.0.0.1"
+      X-Client-IP: "127.0.0.1"
+
+    matchers-condition: or
+    matchers:
+      - type: word
+        words:
+          - "AWS_ACCESS_KEY_ID"
+          - "AWS_SECRET_ACCESS_KEY"
+          - "GOOGLE_CLOUD_STORAGE"
+          - "AZURE_CLIENT_SECRET"
+          - "access_token"
+          - "Authorization: Bearer"
+          - "DB_PASSWORD"
+          - "root:"
+          - "DEBUG_MODE"
+          - "bucket="
+
+      - type: regex
+        regex:
+          - "[A-Za-z0-9_-]*:([A-Za-z0-9_\\-\\.\\+\\/]*={0,2})"
+          - "(?i)authorization: Bearer [a-zA-Z0-9\\-._~+\\/]+=*"
+          - "(?i)aws_secret_access_key[\"']?\\s*:\\s*[\"'][a-zA-Z0-9_\\-]{40}"
+
+      - type: status
+        status:
+          - 200
+          - 403
+          - 500

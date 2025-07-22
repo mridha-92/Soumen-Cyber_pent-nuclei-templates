@@ -1,0 +1,27 @@
+id: js-api-key-detect
+
+info:
+  name: JavaScript API Key Disclosure
+  author: soumenmridha
+  severity: medium
+  description: Detects hardcoded API keys or tokens in JS files
+  tags: exposure,apikey,js,token
+
+requests:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+
+    matchers-condition: or
+    matchers:
+      - type: regex
+        part: body
+        name: generic-api-key
+        regex:
+          - '(?i)(api[_-]?key|access[_-]?token|secret|authorization|bearer)[\'"=:\s]{0,5}[A-Za-z0-9_\-]{16,}'
+
+    extractors:
+      - type: regex
+        part: body
+        regex:
+          - '(?i)(api[_-]?key|access[_-]?token|secret|authorization|bearer)[\'"=:\s]{0,5}[A-Za-z0-9_\-]{16,}'

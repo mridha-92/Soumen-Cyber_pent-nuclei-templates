@@ -1,0 +1,119 @@
+id: sensitive-info-full-spectrum-v2
+info:
+  name: Sensitive Info Disclosure - Credentials, Internal Docs, Financial, Server, Directories, Emails
+  author: soumen
+  severity: high
+  description: Detects exposed credentials, internal documents, financial data, server leaks, misconfigured directories, and sensitive email/contact information.
+  tags: sensitive, credentials, financial, keys, confidential, misconfig, source-code, logs, admin, emails, contact
+
+requests:
+  - method: GET
+    path:
+      # Credentials / Secrets / Keys
+      - "{{BaseURL}}/.env"
+      - "{{BaseURL}}/.aws/credentials"
+      - "{{BaseURL}}/.git/config"
+      - "{{BaseURL}}/config.json"
+      - "{{BaseURL}}/settings.json"
+      - "{{BaseURL}}/db.json"
+      - "{{BaseURL}}/backup.zip"
+      - "{{BaseURL}}/id_rsa"
+      - "{{BaseURL}}/credentials.json"
+      - "{{BaseURL}}/database.yml"
+      - "{{BaseURL}}/web.config"
+      - "{{BaseURL}}/phpinfo.php"
+      - "{{BaseURL}}/.env.local"
+      - "{{BaseURL}}/src/.env"
+      # Internal Documents
+      - "{{BaseURL}}/documents/internal.pdf"
+      - "{{BaseURL}}/documents/confidential.pdf"
+      - "{{BaseURL}}/files/internal-use-only.doc"
+      - "{{BaseURL}}/files/confidential.xls"
+      - "{{BaseURL}}/files/payroll.csv"
+      - "{{BaseURL}}/files/employee-salary.xls"
+      - "{{BaseURL}}/files/restricted.docx"
+      # Financial Info
+      - "{{BaseURL}}/financial-report.csv"
+      - "{{BaseURL}}/financial-report.xls"
+      # Logs & Dumps
+      - "{{BaseURL}}/logs/access.log"
+      - "{{BaseURL}}/logs/error.log"
+      - "{{BaseURL}}/logs/debug.log"
+      - "{{BaseURL}}/debug.txt"
+      - "{{BaseURL}}/error.txt"
+      - "{{BaseURL}}/database.sql"
+      - "{{BaseURL}}/db-backup.sql"
+      - "{{BaseURL}}/backup/database.sql"
+      # Source Code Files
+      - "{{BaseURL}}/config.php"
+      - "{{BaseURL}}/index.js"
+      - "{{BaseURL}}/index of/config.php"
+      # Misconfigured Directories
+      - "{{BaseURL}}/index of/private"
+      - "{{BaseURL}}/index of/backup"
+      - "{{BaseURL}}/index of/confidential"
+      - "{{BaseURL}}/index of/database"
+      # Admin / Dashboards
+      - "{{BaseURL}}/admin"
+      - "{{BaseURL}}/dashboard"
+      - "{{BaseURL}}/secure"
+      - "{{BaseURL}}/admin-panel"
+      - "{{BaseURL}}/restricted"
+      # Sensitive Emails / Contacts
+      - "{{BaseURL}}/contacts.csv"
+      - "{{BaseURL}}/contacts.xlsx"
+      - "{{BaseURL}}/employee-contact.xlsx"
+      - "{{BaseURL}}/staff-emails.csv"
+    matchers-condition: or
+    matchers:
+      - type: word
+        words:
+          # Credentials
+          - "DB_PASSWORD="
+          - "DB_USER="
+          - "AWS_ACCESS_KEY_ID"
+          - "AWS_SECRET_ACCESS_KEY"
+          - "google_api_key="
+          - "firebase_api_key="
+          - "BEGIN RSA PRIVATE KEY"
+          - "BEGIN OPENSSH PRIVATE KEY"
+          - "username"
+          - "password"
+          - "apikey"
+          - "api_key"
+          - "access_token"
+          - "client_secret"
+          - "secret_key"
+          # Internal Docs
+          - "confidential"
+          - "internal use only"
+          - "restricted"
+          - "not for public release"
+          - "employee salary"
+          - "payroll"
+          # Financial / Payment Info
+          - "credit card number"
+          - "CVV"
+          - "Visa"
+          - "MasterCard"
+          - "bank account number"
+          - "routing number"
+          # Logs / Dumps
+          - "error log"
+          - "debug log"
+          - "database dump"
+          - "backup"
+          # Open Directories
+          - "Index of /"
+          - "Parent Directory"
+          # Admin / Dashboard
+          - "admin panel"
+          - "restricted access"
+          - "login"
+          # Sensitive Emails / Contacts
+          - "employee email"
+          - "staff contact"
+          - "classified"
+          - "sensitive information"
+          - "do not distribute"
+        condition: or

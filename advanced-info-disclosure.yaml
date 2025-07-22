@@ -1,0 +1,56 @@
+id: advanced-info-disclosure-check
+
+info:
+  name: Advanced Information Disclosure Scanner
+  author: soumen-mridha
+  severity: high
+  description: Detects sensitive files, configuration leaks, API keys, and credentials.
+
+requests:
+  - method: GET
+    path:
+      - "{{BaseURL}}/.env"
+      - "{{BaseURL}}/.git/config"
+      - "{{BaseURL}}/config.php"
+      - "{{BaseURL}}/wp-config.php"
+      - "{{BaseURL}}/debug.log"
+      - "{{BaseURL}}/server-status"
+      - "{{BaseURL}}/logs/error.log"
+      - "{{BaseURL}}/phpinfo.php"
+      - "{{BaseURL}}/api/keys"
+      - "{{BaseURL}}/backup.tar.gz"
+      - "{{BaseURL}}/database.sql"
+      - "{{BaseURL}}/WEB-INF/web.xml"
+      - "{{BaseURL}}/admin/.htpasswd"
+      - "{{BaseURL}}/composer.lock"
+      - "{{BaseURL}}/package.json"
+      - "{{BaseURL}}/docker-compose.yml"
+
+    matchers-condition: or
+    matchers:
+      - type: word
+        words:
+          - "DB_PASSWORD"
+          - "API_KEY"
+          - "access_token"
+          - "AWS_ACCESS_KEY"
+          - "PRIVATE_KEY"
+          - "password:"
+          - "root:"
+          - "DEBUG"
+          - "composer"
+          - "package"
+          - "server-status"
+          - "<web-app xmlns="
+          - "mysql://"
+          - "http://localhost"
+
+      - type: regex
+        regex:
+          - "[A-Za-z0-9_-]*:([A-Za-z0-9_\\-\\.\\+\\/]*={0,2})"
+          - "(?i)authorization: Bearer [a-zA-Z0-9\\-._~+\\/]+=*"
+          - "(?i)secret_key[\"']?\\s*:\\s*[\"'][a-zA-Z0-9_\\-]{32,}"
+
+      - type: status
+        status:
+          - 200

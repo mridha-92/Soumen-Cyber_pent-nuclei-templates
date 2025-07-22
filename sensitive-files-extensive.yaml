@@ -1,0 +1,92 @@
+id: sensitive-files-extensive
+
+info:
+  name: Extensive Sensitive File Exposure Scanner
+  author: soumenmridha
+  severity: high
+  description: |
+    Scans for publicly accessible sensitive files containing secrets, keys, passwords, or internal configuration. Inspired by SecLists, GitHub leaks, and bug bounty findings.
+  tags: exposure,file,leak,credentials,backup,secrets
+
+requests:
+  - method: GET
+    path:
+      - "{{BaseURL}}/.env"
+      - "{{BaseURL}}/.env.production"
+      - "{{BaseURL}}/.git/config"
+      - "{{BaseURL}}/.svn/entries"
+      - "{{BaseURL}}/.hg/hgrc"
+      - "{{BaseURL}}/.aws/credentials"
+      - "{{BaseURL}}/.npmrc"
+      - "{{BaseURL}}/.dockercfg"
+      - "{{BaseURL}}/.git-credentials"
+      - "{{BaseURL}}/.bash_history"
+      - "{{BaseURL}}/config.php"
+      - "{{BaseURL}}/config.json"
+      - "{{BaseURL}}/config.js"
+      - "{{BaseURL}}/wp-config.php"
+      - "{{BaseURL}}/settings.py"
+      - "{{BaseURL}}/application.properties"
+      - "{{BaseURL}}/application.yml"
+      - "{{BaseURL}}/docker-compose.yml"
+      - "{{BaseURL}}/Dockerfile"
+      - "{{BaseURL}}/debug.log"
+      - "{{BaseURL}}/error.log"
+      - "{{BaseURL}}/access.log"
+      - "{{BaseURL}}/db.sql"
+      - "{{BaseURL}}/database.sql"
+      - "{{BaseURL}}/db.sqlite"
+      - "{{BaseURL}}/backup.bak"
+      - "{{BaseURL}}/backup.zip"
+      - "{{BaseURL}}/admin.bak"
+      - "{{BaseURL}}/admin/config.bak"
+      - "{{BaseURL}}/index.php~"
+      - "{{BaseURL}}/notes.txt"
+      - "{{BaseURL}}/passwords.txt"
+      - "{{BaseURL}}/secrets.txt"
+      - "{{BaseURL}}/keys.txt"
+      - "{{BaseURL}}/auth.json"
+      - "{{BaseURL}}/internal.docx"
+      - "{{BaseURL}}/local.settings.json"
+
+    matchers-condition: or
+    matchers:
+
+      - type: word
+        part: body
+        words:
+          # Env/config/secrets
+          - "DB_PASSWORD="
+          - "DB_USERNAME="
+          - "DATABASE_URL="
+          - "MYSQL_ROOT_PASSWORD="
+          - "PGPASSWORD="
+          - "REDIS_URL="
+          - "APP_KEY="
+          - "SECRET_KEY="
+          - "JWT_SECRET="
+          - "MAIL_PASSWORD="
+          - "SENDGRID_API_KEY="
+          - "AWS_SECRET_ACCESS_KEY="
+          - "API_KEY="
+          - "PRIVATE_KEY="
+          - "ACCESS_TOKEN="
+          - "ENCRYPTION_KEY="
+          - "ssh-rsa"
+          - "BEGIN RSA PRIVATE KEY"
+          - "Authorization: Bearer"
+          - "Basic YWxhZGRpbjpvcGVuc2VzYW1l"  # example: base64 encoded "aladdin:opensesame"
+          - "password="
+          - "pass:"
+          - "pwd="
+          - "user="
+          - "token="
+          - "client_secret"
+          - "credentials"
+
+        condition: or
+
+      - type: status
+        status:
+          - 200
+

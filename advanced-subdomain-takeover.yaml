@@ -1,0 +1,93 @@
+id: advanced-subdomain-takeover
+
+info:
+  name: Advanced Subdomain Takeover Detection
+  author: soumen
+  severity: high
+  description: |
+    This template detects potential subdomain takeover vulnerabilities. 
+    A subdomain takeover occurs when a subdomain points via DNS (usually CNAME) to a third-party service (such as GitHub Pages, Heroku, AWS S3, etc.), but the resource it references (e.g., bucket, repository, app) has been deleted or unclaimed.
+    
+    An attacker can claim the missing resource on the external service and hijack the subdomain. This allows serving malicious content from a trusted domain, enabling phishing, session hijacking, and malware delivery.
+    
+    Common services vulnerable to this misconfiguration include:
+    - GitHub Pages
+    - AWS S3
+    - Heroku
+    - Azure
+    - Fastly
+    - Shopify
+    - Cloudfront
+    - Zendesk
+    
+    Vulnerability Root Cause:
+    1. DNS points to a non-existent resource on a third-party platform.
+    2. The platform allows public users to re-register these resources.
+    3. An attacker claims the resource and hosts content under the victim's subdomain.
+
+    Example:
+    `beta.example.com -> CNAME github.io` but `github.io` repo no longer exists.
+
+  reference:
+    - https://github.com/EdOverflow/can-i-take-over-xyz
+    - https://github.com/projectdiscovery/nuclei-templates
+  tags: takeover, misconfiguration, dns, reconnaissance, bugbounty, security
+
+metadata:
+  impact: |
+    Successful exploitation allows full control over the subdomain, enabling phishing attacks, defacements, cookie theft, and other malicious activities under the target domain's trust scope.
+  remediation: |
+    Regularly audit DNS records and remove unused or stale entries pointing to third-party services.
+    Monitor DNS configurations through automated tools to prevent exposure.
+  exploit-scenario: |
+    1. Organization deletes a Heroku app but keeps the DNS record pointing to it.
+    2. Attacker claims the same app name on Heroku.
+    3. The attacker's content is now served at `victim.example.com`.
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+    headers:
+      User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0 Safari/537.36
+
+    matchers-condition: or
+    matchers:
+      - type: word
+        words:
+          - "NoSuchBucket"
+          - "NoSuchDomain"
+          - "The specified bucket does not exist"
+          - "There's nothing here, yet"
+          - "Do you want to register"
+          - "Repository not found"
+          - "Unclaimed"
+          - "Non-Existent Domain"
+          - "Sorry, this page is no longer available."
+          - "The resource could not be found"
+          - "Please claim your domain"
+          - "This project has been removed"
+          - "No such app"
+          - "Heroku | No such app"
+          - "You've found a page that doesn't exist."
+          - "There is no app configured at that hostname"
+          - "Unknown Site"
+          - "Fastly error: unknown domain"
+          - "The feed has not been found."
+          - "The thing you were looking for is no longer here"
+        condition: or
+        part: body
+
+      - type: status
+        status:
+          - 404
+          - 400
+          - 403
+          - 500
+
+    extractors:
+      - type: regex
+        part: body
+        regex:
+          - "(?:NoSuchBucket|NoSuchDomain|Please claim your domain|Fastly error: unknown domain|Heroku | No such app)"
+
